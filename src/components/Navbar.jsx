@@ -7,10 +7,10 @@ import { useDispatch, useSelector } from 'react-redux'
 import { Link, useNavigate } from 'react-router-dom'
 
 const navigation = [
-  { name: 'Dashboard', href: '#', current: true },
-  { name: 'Team', href: '#', current: false },
-  { name: 'Projects', href: '#', current: false },
-  { name: 'Calendar', href: '#', current: false },
+  { name: 'Dashboard', to: '/', current: true },
+  { name: 'Team', to: '#', current: false },
+  { name: 'Projects', to: '#', current: false },
+  { name: 'Calendar', to: '#', current: false },
 ]
 
 function classNames(...classes) {
@@ -34,7 +34,6 @@ export default function NavBar() {
     }
   }
   const user=useSelector((store)=>store.user);
-  console.log(user);
   return (
     <Disclosure
       as="nav"
@@ -62,9 +61,9 @@ export default function NavBar() {
             {user &&  <div className="hidden sm:ml-6 sm:block">
               <div className="flex space-x-4">
                 {navigation.map((item) => (
-                  <a
+                  <Link
                     key={item.name}
-                    href={item.href}
+                    to={item.to}
                     aria-current={item.current ? 'page' : undefined}
                     className={classNames(
                       item.current ? 'bg-gray-950/50 text-white' : 'text-gray-300 hover:bg-white/5 hover:text-white',
@@ -72,7 +71,7 @@ export default function NavBar() {
                     )}
                   >
                     {item.name}
-                  </a>
+                  </Link>
                 ))}
               </div>
             </div>}
@@ -103,6 +102,14 @@ export default function NavBar() {
                 transition
                 className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-gray-800 py-1 outline -outline-offset-1 outline-white/10 transition data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in"
               >
+                <MenuItem>
+                  <Link
+                    to="/profile"
+                    className="block px-4 py-2 text-sm text-gray-300 data-focus:bg-white/5 data-focus:outline-hidden"
+                  >
+                    Profile
+                  </Link>
+                </MenuItem>
                 <MenuItem>
                   <Link
                     to="/editProfile"
@@ -138,8 +145,8 @@ export default function NavBar() {
           {navigation.map((item) => (
             <DisclosureButton
               key={item.name}
-              as="a"
-              href={item.href}
+              as={Link}
+              to={item.to}
               aria-current={item.current ? 'page' : undefined}
               className={classNames(
                 item.current ? 'bg-gray-950/50 text-white' : 'text-gray-300 hover:bg-white/5 hover:text-white',

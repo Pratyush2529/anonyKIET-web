@@ -7,6 +7,7 @@ import { Provider } from 'react-redux';
 import { store } from './utils/appStore';
 import Home from './components/Home';
 import EditProfile from './components/EditProfile';
+import Profile from './components/Profile';
 
 function App() {
 
@@ -23,6 +24,7 @@ function App() {
           <Route index element={<Home />} />
           <Route path="login" element={<Login />} />
           <Route path="editProfile" element={<EditProfile />} />
+          <Route path="profile" element={<Profile />} />
           {/* <Route path="profile" element={<Profile />} />
           <Route path="*" element={<NotFound />} /> */}
 
