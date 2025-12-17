@@ -8,9 +8,25 @@ import { store } from './utils/appStore';
 import Home from './components/Home';
 import EditProfile from './components/EditProfile';
 import Profile from './components/Profile';
+import Chat from './components/Chat';
+import { useEffect } from 'react';
+import { getSocket } from './utils/socket';
 
 function App() {
+  useEffect(()=>{
+    const socket=getSocket();
+    socket.on("connect", () => {
+            console.log("Socket connected:", socket.id);
+        });
 
+        socket.on("disconnect", () => {
+            console.log("Socket disconnected");
+        });
+
+        return () => {
+            socket.off("connect");
+            socket.off("disconnect");}
+  }, []);
   return (
     <>
     <Provider store={store}>
@@ -25,6 +41,7 @@ function App() {
           <Route path="login" element={<Login />} />
           <Route path="editProfile" element={<EditProfile />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="/chat/:chatId" element={<Chat/>} />
           {/* <Route path="profile" element={<Profile />} />
           <Route path="*" element={<NotFound />} /> */}
 

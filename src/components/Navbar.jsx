@@ -37,7 +37,7 @@ export default function NavBar() {
   return (
     <Disclosure
       as="nav"
-      className="relative bg-cyan-900 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-white/10"
+      className=" bg-cyan-900 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-white/10 sticky top-0 z-100"
     >
       <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
         <div className="relative flex h-16 items-center justify-between">
@@ -119,20 +119,19 @@ export default function NavBar() {
                   </Link>
                 </MenuItem>
                 <MenuItem>
-                  <a
-                    href="#"
+                  <Link
+                    to=""
                     className="block px-4 py-2 text-sm text-gray-300 data-focus:bg-white/5 data-focus:outline-hidden"
                   >
                     Settings
-                  </a>
+                  </Link>
                 </MenuItem>
                 <MenuItem>
-                  <a onClick={handleLogout}
-                    href="#"
+                  <p onClick={handleLogout}
                     className="block px-4 py-2 text-sm text-gray-300 data-focus:bg-white/5 data-focus:outline-hidden"
                   >
                     Logout
-                  </a>
+                  </p>
                 </MenuItem>
               </MenuItems>
             </Menu>}

@@ -1,117 +1,198 @@
-import { useState } from 'react';
-import { MessageSquare } from 'lucide-react';
-import ChatList from '../components/ChatList';
-import CreateGroupModal from '../components/CreateGroupModal';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { MessageCircle, Users, UserSearch, Plus } from 'lucide-react';
+// import api from '../utils/api';
 import UserSuggestionsModal from '../components/UserSuggestionsModal';
-import ChatWindow from '../components/ChatWindow';
+import axios from 'axios';
+import { BASE_URL } from '@/utils/constants';
 
 /**
- * HomePage component - Main chat interface
- * Displays chat list sidebar and main chat area
- * Handles chat selection and group creation
+ * ChatsListPage - Displays all user's chats
+ * Full page view with discover users functionality
  */
 const Home = () => {
-    const [selectedChat, setSelectedChat] = useState(null);
-    const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
+    const navigate = useNavigate();
+    const [chats, setChats] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [isSuggestionsModalOpen, setIsSuggestionsModalOpen] = useState(false);
-    const [refreshKey, setRefreshKey] = useState(0);
+    const [searchQuery, setSearchQuery] = useState('');
 
-    const handleChatSelect = (chat) => {
-        setSelectedChat(chat);
+    useEffect(() => {
+        fetchChats();
+    }, []);
+
+    const fetchChats = async () => {
+        try {
+            setLoading(true);
+            const response = await axios.get(BASE_URL+'/chats/myChats', { withCredentials: true });
+            const rooms = response.data.chats || [];
+            const formattedChats = rooms.map(room => ({
+                _id: room._id,
+                name: room.name,
+                isGroup: room.isGroupChat,
+                participantCount: room.members?.length || 0,
+                description: room.description || '',
+                photoUrl: room.photoUrl,
+                members: room.members || [],
+                lastMessage: '',
+                lastMessageTime: room.updatedAt,
+                unreadCount: 0,
+                createdAt: room.createdAt,
+            }));
+            setChats(formattedChats);
+        } catch (error) {
+            console.error('Error fetching chats:', error);
+            setChats([]);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleCreateGroup = () => {
-        setIsCreateGroupModalOpen(true);
+    const handleChatClick = (chat) => {
+        navigate(`/chat/${chat._id}`, { state: { chat } });
     };
 
-    const handleGroupCreated = (newGroup) => {
-        console.log('New group created:', newGroup);
-        // Refresh chat list by changing the key
-        setRefreshKey(prev => prev + 1);
+    const handleChatCreated = (newChat) => {
+        console.log('New private chat created:', newChat);
+        fetchChats(); // Refresh the list
+        navigate(`/chat/${newChat._id}`, { state: { chat: newChat } });
     };
+
+    const formatTime = (timestamp) => {
+        const date = new Date(timestamp);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+
+        if (diffMins < 1) return 'Just now';
+        if (diffMins < 60) return `${diffMins}m ago`;
+        if (diffHours < 24) return `${diffHours}h ago`;
+        if (diffDays < 7) return `${diffDays}d ago`;
+        return date.toLocaleDateString();
+    };
+
+    const filteredChats = chats.filter(chat =>
+        chat.name?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     return (
-        <div className="flex h-[calc(100vh-4rem)] bg-gray-50">
-            {/* Left Sidebar - Chat List */}
-            <ChatList
-                key={refreshKey}
-                onChatSelect={handleChatSelect}
-                onCreateGroup={handleCreateGroup}
-                onDiscoverUsers={() => setIsSuggestionsModalOpen(true)}
-            />
+        <div className="min-h-screen bg-gray-50">
+            {/* Header */}
+            <div className="bg-white border-b border-gray-200 sticky top-16">
+                <div className="max-w-4xl mx-auto px-4 py-4">
+                    <div className="flex items-center justify-between mb-4">
+                        <h1 className="text-2xl font-bold text-gray-900">Messages</h1>
+                        <button
+                            onClick={() => setIsSuggestionsModalOpen(true)}
+                            className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-[#003366] to-[#2C7A7B] text-white rounded-lg hover:from-[#002244] hover:to-[#1A5F5F] transition-all duration-200 shadow-sm"
+                        >
+                            <UserSearch className="w-4 h-4" />
+                            <span className="text-sm font-medium">Discover</span>
+                        </button>
+                    </div>
 
-            {/* Main Chat Area */}
-            <div className="flex-1 flex flex-col">
-                {selectedChat ? (
-                    // Chat selected - Show chat interface
-                    <div className="flex-1 flex flex-col">
-                        {/* Chat Header */}
-                        <div className="bg-white border-b border-gray-200 p-4 shadow-sm">
-                            <div className="flex items-center space-x-3">
-                                {selectedChat.photoUrl ? (
-                                    <img
-                                        src={selectedChat.photoUrl}
-                                        alt={selectedChat.name}
-                                        className="w-10 h-10 rounded-full object-cover"
-                                    />
-                                ) : (
-                                    <div className="w-10 h-10 bg-gradient-to-br from-[#003366] to-[#2C7A7B] rounded-full flex items-center justify-center">
-                                        <span className="text-white font-semibold text-sm">
-                                            {selectedChat.name?.charAt(0).toUpperCase() || 'C'}
-                                        </span>
+                    {/* Search Bar */}
+                    <input
+                        type="text"
+                        placeholder="Search chats..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2C7A7B] focus:border-transparent"
+                    />
+                </div>
+            </div>
+
+            {/* Chats List */}
+            <div className="max-w-4xl mx-auto px-4 py-4">
+                {loading ? (
+                    <div className="flex items-center justify-center py-20">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#003366]"></div>
+                    </div>
+                ) : filteredChats.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-20 text-center">
+                        <div className="w-20 h-20 bg-gradient-to-br from-[#E6F2F5] to-[#FFE5DC] rounded-full flex items-center justify-center mb-6">
+                            <MessageCircle className="w-10 h-10 text-[#003366]" />
+                        </div>
+                        <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                            {searchQuery ? 'No chats found' : 'No chats yet'}
+                        </h2>
+                        <p className="text-gray-600 mb-6 max-w-sm">
+                            {searchQuery
+                                ? 'Try searching with a different name'
+                                : 'Discover new people and start conversations'}
+                        </p>
+                        {!searchQuery && (
+                            <button
+                                onClick={() => setIsSuggestionsModalOpen(true)}
+                                className="px-6 py-3 bg-gradient-to-r from-[#003366] to-[#2C7A7B] text-white rounded-lg hover:from-[#002244] hover:to-[#1A5F5F] transition-all duration-200 font-medium shadow-md hover:shadow-lg"
+                            >
+                                Discover People
+                            </button>
+                        )}
+                    </div>
+                ) : (
+                    <div className="space-y-2">
+                        {filteredChats.map((chat) => (
+                            <div
+                                key={chat.id}
+                                onClick={() => handleChatClick(chat)}
+                                className="bg-white rounded-lg p-4 cursor-pointer hover:shadow-md transition-all duration-200 border border-gray-100"
+                            >
+                                <div className="flex items-center space-x-3">
+                                    {/* Avatar */}
+                                    {chat.photoUrl ? (
+                                        <img
+                                            src={chat.photoUrl}
+                                            alt={chat.name}
+                                            className="w-14 h-14 rounded-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#003366] to-[#2C7A7B] flex items-center justify-center">
+                                            <span className="text-white font-semibold text-lg">
+                                                {chat.name?.charAt(0).toUpperCase() || 'C'}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    {/* Chat Info */}
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex justify-between items-baseline mb-1">
+                                            <h3 className="text-base font-semibold text-gray-900 truncate">
+                                                {chat.name || 'Unknown'}
+                                            </h3>
+                                            {chat.lastMessageTime && (
+                                                <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
+                                                    {formatTime(chat.lastMessageTime)}
+                                                </span>
+                                            )}
+                                        </div>
+                                        {(chat.description || chat.lastMessage) && (
+                                            <p className="text-sm text-gray-600 truncate">
+                                                {chat.description || chat.lastMessage}
+                                            </p>
+                                        )}
                                     </div>
-                                )}
-                                <div>
-                                    <h2 className="text-lg font-semibold text-gray-900">
-                                        {selectedChat.name || 'Chat'}
-                                    </h2>
-                                    {selectedChat.isGroup && selectedChat.participantCount && (
-                                        <p className="text-sm text-gray-500">
-                                            {selectedChat.participantCount} members
-                                        </p>
+
+                                    {/* Unread Badge */}
+                                    {chat.unreadCount > 0 && (
+                                        <div className="bg-[#FF6B35] text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0">
+                                            {chat.unreadCount}
+                                        </div>
                                     )}
                                 </div>
                             </div>
-                        </div>
-
-                        {/* Chat Window Component */}
-                        <ChatWindow chat={selectedChat} />
-                    </div>
-                ) : (
-                    // No chat selected - Show placeholder
-                    <div className="flex-1 flex items-center justify-center bg-white">
-                        <div className="text-center">
-                            <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-[#E6F2F5] to-[#FFE5DC] rounded-full mb-6">
-                                <MessageSquare className="w-12 h-12 text-[#003366]" />
-                            </div>
-                            <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-                                Welcome to anonyKIET
-                            </h2>
-                            <p className="text-gray-600 mb-6 max-w-md">
-                                Select a room from the sidebar to start messaging, or create a new room to get started
-                            </p>
-                            <button
-                                onClick={handleCreateGroup}
-                                className="px-6 py-3 bg-gradient-to-r from-[#003366] to-[#2C7A7B] text-white rounded-lg hover:from-[#002244] hover:to-[#1A5F5F] transition-all duration-200 font-medium shadow-md hover:shadow-lg"
-                            >
-                                Create Your First Room
-                            </button>
-                        </div>
+                        ))}
                     </div>
                 )}
             </div>
-
-            {/* Create Group Modal */}
-            <CreateGroupModal
-                isOpen={isCreateGroupModalOpen}
-                onClose={() => setIsCreateGroupModalOpen(false)}
-                onGroupCreated={handleGroupCreated}
-            />
 
             {/* User Suggestions Modal */}
             <UserSuggestionsModal
                 isOpen={isSuggestionsModalOpen}
                 onClose={() => setIsSuggestionsModalOpen(false)}
+                onChatCreated={handleChatCreated}
             />
         </div>
     );
