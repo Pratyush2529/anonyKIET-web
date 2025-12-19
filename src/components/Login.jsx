@@ -57,8 +57,6 @@ const navigate = useNavigate();
                 otp: otp.trim(),
             }, { withCredentials: true });
             const {isNewUser, user}=response.data;
-            console.log(isNewUser);
-            console.log(user);
             dispatch(addUser(user));
             if(isNewUser) navigate("/editProfile");
             else navigate('/');

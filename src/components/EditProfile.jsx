@@ -11,7 +11,6 @@ const EditProfile = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const user = useSelector((store) => store.user);
-  console.log(user);
 
 
   const [formData, setFormData] = useState({

@@ -38,6 +38,7 @@ const Home = () => {
                 lastMessageTime: room.updatedAt,
                 unreadCount: 0,
                 createdAt: room.createdAt,
+                isBlocked: room.isBlocked ?? false
             }));
             setChats(formattedChats);
         } catch (error) {

@@ -9,7 +9,6 @@ const getSocket = () => {
         socket = io(BASE_URL, {
             autoConnect: true,
             withCredentials: true,
-            transports: ["websocket"], // optional but recommended
         });
     }
     return socket;
