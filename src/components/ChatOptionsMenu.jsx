@@ -42,7 +42,7 @@ const ChatOptionsMenu = ({ onDelete, onBlock, onUnblock }) => {
             Delete Chat
           </button>
 
-          <button
+          {/* <button
             onClick={() => {
               onBlock();
               setOpen(false);
@@ -61,7 +61,7 @@ const ChatOptionsMenu = ({ onDelete, onBlock, onUnblock }) => {
           >
             <Ban className="w-4 h-4 mr-3" />
             Unblock User
-          </button>
+          </button> */}
         </div>
       )}
     </div>
