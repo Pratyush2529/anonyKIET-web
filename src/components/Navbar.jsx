@@ -14,13 +14,11 @@ import axios from 'axios'
 import { useDispatch, useSelector } from 'react-redux'
 import { Link, useNavigate } from 'react-router-dom'
 import logo from "../assets/anonyKIET.png"
-import { Bug, ChevronDown } from 'lucide-react';
+import { Bug, ChevronDown, Sparkles } from 'lucide-react';
 
 const navigation = [
+  { name: 'Feed', to: '/feed', current: false, comingSoon: true },
   // { name: 'Dashboard', to: '/', current: true },
-  // { name: 'Team', to: '#', current: false },
-  // { name: 'Projects', to: '#', current: false },
-  // { name: 'Calendar', to: '#', current: false },
 ]
 
 function classNames(...classes) {
@@ -83,10 +81,18 @@ export default function NavBar() {
                     item.current
                       ? 'bg-gray-950/50 text-white'
                       : 'text-gray-300 hover:bg-white/10 hover:text-white',
-                    'rounded-md px-3 py-2 text-sm font-medium transition-colors'
+                    'relative rounded-md px-3 py-2 text-sm font-medium transition-colors group'
                   )}
                 >
-                  {item.name}
+                  <span className="flex items-center gap-2">
+                    {item.name}
+                    {item.comingSoon && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 text-white rounded border border-amber-300/50 shadow-lg shadow-amber-500/30 animate-pulse">
+        <Sparkles className="h-2.5 w-2.5" />
+        SOON
+      </span>
+                    )}
+                  </span>
                 </Link>
               ))}
 
@@ -207,15 +213,21 @@ export default function NavBar() {
         {user && (
           <>
             {navigation.map((item) => (
-              <DisclosureButton
-                key={item.name}
-                as={Link}
-                to={item.to}
-                className="block rounded-md px-3 py-2 text-base text-gray-300 hover:bg-white/10 hover:text-white transition-colors"
-              >
-                {item.name}
-              </DisclosureButton>
-            ))}
+  <DisclosureButton
+    key={item.name}
+    as={Link}
+    to={item.to}
+    className="flex items-center gap-2 rounded-md px-3 py-2 text-base text-gray-300 hover:bg-white/10 hover:text-white transition-colors"
+  >
+    <span>{item.name}</span>
+    {item.comingSoon && (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 text-white rounded border border-amber-300/50 shadow-lg shadow-amber-500/30 animate-pulse">
+        <Sparkles className="h-2.5 w-2.5" />
+        SOON
+      </span>
+    )}
+  </DisclosureButton>
+))}
 
             {/* === REPORT BUG BUTTON (MOBILE) === */}
             <DisclosureButton

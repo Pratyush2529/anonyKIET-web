@@ -142,7 +142,7 @@ const UserSuggestionsModal = ({ isOpen, onClose, onChatCreated }) => {
               >
                 <div className="flex items-start gap-3 mb-3">
                   <img
-                    src={user.photoUrl}
+                    src={user.photoUrl.url}
                     alt={user.username}
                     className="w-12 h-12 rounded-full object-cover"
                   />

@@ -11,6 +11,7 @@ import Profile from './components/Profile';
 import Chat from './components/Chat';
 import { useEffect } from 'react';
 import { getSocket } from './utils/socket';
+import Feed from './components/Feed';
 
 function App() {
   useEffect(()=>{
@@ -41,7 +42,8 @@ function App() {
           <Route path="login" element={<Login />} />
           <Route path="editProfile" element={<EditProfile />} />
           <Route path="profile" element={<Profile />} />
-          <Route path="/chat/:chatId" element={<Chat/>} />
+          <Route path="chat/:chatId" element={<Chat/>} />
+          <Route path="feed" element={<Feed/>} />
           {/* <Route path="profile" element={<Profile />} />
           <Route path="*" element={<NotFound />} /> */}
 
