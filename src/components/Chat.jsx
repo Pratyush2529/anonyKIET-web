@@ -242,9 +242,17 @@ const Chat = () => {
             </button>
             <div className="flex items-center gap-3">
               <div className="relative">
-                <div className="w-11 h-11 rounded-full bg-gradient-to-br from-teal-400 to-cyan-600 flex items-center justify-center text-white font-semibold text-lg shadow-md">
-                  {chat?.name?.charAt(0).toUpperCase() || "?"}
-                </div>
+                {chat?.photoUrl?.url ? (
+  <img
+    src={chat.photoUrl.url}
+    alt={chat?.name}
+    className="w-11 h-11 rounded-full object-cover shadow-md"
+  />
+) : (
+  <div className="w-11 h-11 rounded-full bg-gradient-to-br from-teal-400 to-cyan-600 flex items-center justify-center text-white font-semibold text-lg shadow-md">
+    {chat?.name?.charAt(0)?.toUpperCase() || "?"}
+  </div>
+)}
                 <div
                   className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white shadow-sm ${
                     isConnected ? "bg-emerald-500" : "bg-gray-400"
