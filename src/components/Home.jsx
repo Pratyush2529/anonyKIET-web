@@ -145,7 +145,7 @@ const Home = () => {
                                     {/* Avatar */}
                                     {chat.photoUrl ? (
                                         <img
-                                            src={chat.photoUrl}
+                                            src={chat.photoUrl.url}
                                             alt={chat.name}
                                             className="w-14 h-14 rounded-full object-cover"
                                         />
