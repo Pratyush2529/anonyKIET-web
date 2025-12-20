@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { Lock } from "lucide-react";
 import { useDispatch } from 'react-redux';
 import { addUser } from '@/utils/userSlice';
+import logo from "../assets/anonyKIET.png"
 
 
 const Login = () => {
@@ -82,12 +83,7 @@ const navigate = useNavigate();
             <div className="max-w-md w-full">
                 {/* Logo and Title */}
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-[#003366] to-[#2C7A7B] rounded-2xl shadow-lg mb-4">
-                        {/* <MessageCircle className="w-8 h-8 text-white" /> */}
-                    </div>
-                    <h1 className="text-4xl font-bold bg-gradient-to-r from-[#003366] to-[#FF6B35] bg-clip-text text-transparent mb-2">
-                        anonyKIET
-                    </h1>
+                        <img src={logo} alt="" />
                     <p className="text-gray-600">Anonymous chat for KIET students</p>
                 </div>
 

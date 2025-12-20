@@ -17,10 +17,12 @@ const EditProfile = () => {
     username: user?.username || '',
     age: user?.age || '',
     gender: user?.gender || '',
-    photoUrl: user?.photoUrl || '',
+    // photoUrl: user?.photoUrl || '',
     about: user?.about || '',
     skills: user?.skills || []
   });
+
+  const [profilePicFile, setProfilePicFile] = useState(null);
 
   const [currentSkill, setCurrentSkill] = useState('');
   const [loading, setLoading] = useState(false);
@@ -72,14 +74,34 @@ const EditProfile = () => {
 
     try {
       setLoading(true);
-      const response = await axios.patch(
-        BASE_URL + '/profile/edit',
-        {
-          ...formData,
-          age: parseInt(formData.age)
-        },
-        { withCredentials: true }
-      );
+      //--------------------------------
+
+
+      const payload = new FormData();
+
+payload.append("username", formData.username);
+payload.append("age", parseInt(formData.age));
+payload.append("gender", formData.gender);
+payload.append("about", formData.about);
+payload.append("skills", JSON.stringify(formData.skills));
+
+if (profilePicFile) {
+  payload.append("profilePic", profilePicFile);
+}
+
+const response = await axios.patch(
+  BASE_URL + "/profile/edit",
+  payload,
+  {
+    withCredentials: true,
+  }
+);
+
+
+
+
+
+      //--------------------------------
       
       dispatch(addUser(response.data.data));
       toast.success('Profile Updated Successfully!');
@@ -198,27 +220,35 @@ const EditProfile = () => {
               </div>
             </div>
 
-            {/* Photo URL */}
-            <div>
-              <label htmlFor="photoUrl" className="block text-sm font-medium text-gray-700 mb-2">
-                Photo URL
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Image className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="url"
-                  id="photoUrl"
-                  name="photoUrl"
-                  value={formData.photoUrl}
-                  onChange={handleInputChange}
-                  placeholder="https://example.com/photo.jpg"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent"
-                  disabled={loading}
-                />
-              </div>
-            </div>
+            {/* Profile Picture */}
+<div>
+  <label className="block text-sm font-medium text-gray-700 mb-2">
+    Profile Picture
+  </label>
+
+  <input
+    type="file"
+    accept="image/*"
+    onChange={(e) => setProfilePicFile(e.target.files[0])}
+    disabled={loading}
+    className="block w-full text-sm text-gray-700
+      file:mr-4 file:py-2 file:px-4
+      file:rounded-lg file:border-0
+      file:text-sm file:font-medium
+      file:bg-[#E6F2F5] file:text-[#003366]
+      hover:file:bg-[#D1E7EA]"
+  />
+
+  {/* Image Preview */}
+  {profilePicFile && (
+    <img
+      src={URL.createObjectURL(profilePicFile)}
+      alt="preview"
+      className="mt-3 h-24 w-24 rounded-full object-cover border"
+    />
+  )}
+</div>
+
 
             {/* About */}
             <div>
