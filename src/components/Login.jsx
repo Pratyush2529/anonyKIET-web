@@ -1,9 +1,9 @@
 import { BASE_URL } from '@/utils/constants';
 import axios from 'axios';
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { Lock } from "lucide-react";
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { addUser } from '@/utils/userSlice';
 import logo from "../assets/anonyKIET.png"
 
@@ -17,6 +17,15 @@ const navigate = useNavigate();
     const [otpSent, setOtpSent] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+  const user = useSelector((state) => state.user);
+
+useEffect(() => {
+  if (user) {
+    navigate("/", { replace: true });
+  }
+}, [user, navigate]);
+
+
 
     const handleSendOtp = async (e) => {
         e.preventDefault();
