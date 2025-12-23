@@ -1,12 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MessageCircle, Users, UserSearch, Plus } from 'lucide-react';
 // import api from '../utils/api';
 import UserSuggestionsModal from '../components/UserSuggestionsModal';
 import axios from 'axios';
 import { BASE_URL } from '@/utils/constants';
-import { getSocket } from '@/utils/socket';
-import { useSelector } from 'react-redux';
 
 /**
  * ChatsListPage - Displays all user's chats
@@ -14,22 +12,6 @@ import { useSelector } from 'react-redux';
  */
 const Home = () => {
     const navigate = useNavigate();
-    const socket = getSocket();
-    const user = useSelector((store) => store.user);
-    const currentUserId = user?._id;
-
-    // Use ref to always have latest currentUserId in socket listener (fixes closure issue)
-    const currentUserIdRef = useRef(currentUserId);
-
-    // Update ref whenever currentUserId changes
-    useEffect(() => {
-        currentUserIdRef.current = currentUserId;
-    }, [currentUserId]);
-
-    // Debug: Check what's in Redux
-    console.log('🔍 Redux user object:', user);
-    console.log('🔍 Current user ID:', currentUserId);
-
     const [chats, setChats] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isSuggestionsModalOpen, setIsSuggestionsModalOpen] = useState(false);
@@ -38,66 +20,6 @@ const Home = () => {
     useEffect(() => {
         fetchChats();
     }, []);
-
-    // Socket listener for new messages - updates chat list in real-time
-    useEffect(() => {
-        console.log('🔧 Home socket effect - Socket exists?', !!socket, 'User ID:', currentUserId);
-
-        if (!socket) {
-            console.log('❌ No socket, skipping listener setup');
-            return;
-        }
-
-        console.log('✅ Setting up newMessage listener in Home');
-
-        const handleNewMessage = (message) => {
-            console.log('🔔 NEW MESSAGE IN HOME:', message);
-            console.log('Message chat ID:', message.chat);
-            console.log('Message sender:', message.sender);
-
-            setChats((prevChats) => {
-                console.log('Current chats:', prevChats.map(c => c.name));
-
-                const updatedChats = prevChats.map((chat) => {
-                    if (chat._id === message.chat) {
-                        console.log('✅ MATCH! Updating chat:', chat.name);
-
-                        // Use ref to get latest currentUserId (avoids stale closure)
-                        const latestUserId = currentUserIdRef.current;
-                        const isOwnMessage = latestUserId ? (message.sender?._id === latestUserId) : false;
-                        console.log('Is own message?', isOwnMessage, '(using ref, userId:', latestUserId, ')');
-
-                        // Update chat with new message info
-                        return {
-                            ...chat,
-                            lastMessage: message.content,
-                            lastMessageTime: message.createdAt,
-                            // Only increment unread if message is NOT from current user
-                            unreadCount: isOwnMessage
-                                ? (chat.unreadCount || 0)
-                                : (chat.unreadCount || 0) + 1
-                        };
-                    }
-                    return chat;
-                });
-
-                console.log('Updated chats:', updatedChats.map(c => ({ name: c.name, unread: c.unreadCount })));
-
-                // Sort chats by most recent message (newest first)
-                return updatedChats.sort((a, b) =>
-                    new Date(b.lastMessageTime) - new Date(a.lastMessageTime)
-                );
-            });
-        };
-
-        socket.on('newMessage', handleNewMessage);
-        console.log('✅ Listener registered');
-
-        return () => {
-            console.log('🔌 Cleaning up listener');
-            socket.off('newMessage', handleNewMessage);
-        };
-    }, [socket]); // Removed currentUserId from deps since we use ref
 
     const fetchChats = async () => {
         try {
@@ -118,11 +40,7 @@ const Home = () => {
                 createdAt: room.createdAt,
                 isBlocked: room.isBlocked ?? false
             }));
-            // Sort by most recent activity
-            const sortedChats = formattedChats.sort((a, b) =>
-                new Date(b.lastMessageTime) - new Date(a.lastMessageTime)
-            );
-            setChats(sortedChats);
+            setChats(formattedChats);
         } catch (error) {
             console.error('Error fetching chats:', error);
             setChats([]);
@@ -132,12 +50,6 @@ const Home = () => {
     };
 
     const handleChatClick = (chat) => {
-        // Clear unread count when opening a chat
-        setChats((prevChats) =>
-            prevChats.map((c) =>
-                c._id === chat._id ? { ...c, unreadCount: 0 } : c
-            )
-        );
         navigate(`/chat/${chat._id}`, { state: { chat } });
     };
 
@@ -225,7 +137,7 @@ const Home = () => {
                     <div className="space-y-2">
                         {filteredChats.map((chat) => (
                             <div
-                                key={chat._id}
+                                key={chat.id}
                                 onClick={() => handleChatClick(chat)}
                                 className="bg-white rounded-lg p-4 cursor-pointer hover:shadow-md transition-all duration-200 border border-gray-100"
                             >
