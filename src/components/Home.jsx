@@ -5,6 +5,8 @@ import { MessageCircle, Users, UserSearch, Plus } from 'lucide-react';
 import UserSuggestionsModal from '../components/UserSuggestionsModal';
 import axios from 'axios';
 import { BASE_URL } from '@/utils/constants';
+import { getSocket } from '@/utils/socket';
+import { useSelector } from 'react-redux';
 
 /**
  * ChatsListPage - Displays all user's chats
@@ -12,6 +14,9 @@ import { BASE_URL } from '@/utils/constants';
  */
 const Home = () => {
     const navigate = useNavigate();
+    const socket = getSocket();
+    const currentUserId = useSelector((store) => store.user?._id);
+
     const [chats, setChats] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isSuggestionsModalOpen, setIsSuggestionsModalOpen] = useState(false);
@@ -21,10 +26,48 @@ const Home = () => {
         fetchChats();
     }, []);
 
+    // Socket listener for new messages - updates chat list in real-time
+    useEffect(() => {
+        if (!socket) return;
+
+        const handleNewMessage = (message) => {
+            console.log('New message received in Home:', message);
+
+            setChats((prevChats) => {
+                const updatedChats = prevChats.map((chat) => {
+                    if (chat._id === message.chat) {
+                        // Update chat with new message info
+                        return {
+                            ...chat,
+                            lastMessage: message.content,
+                            lastMessageTime: message.createdAt,
+                            // Only increment unread if message is NOT from current user
+                            unreadCount: message.sender._id !== currentUserId
+                                ? (chat.unreadCount || 0) + 1
+                                : chat.unreadCount || 0
+                        };
+                    }
+                    return chat;
+                });
+
+                // Sort chats by most recent message (newest first)
+                return updatedChats.sort((a, b) =>
+                    new Date(b.lastMessageTime) - new Date(a.lastMessageTime)
+                );
+            });
+        };
+
+        socket.on('newMessage', handleNewMessage);
+
+        return () => {
+            socket.off('newMessage', handleNewMessage);
+        };
+    }, [socket, currentUserId]);
+
     const fetchChats = async () => {
         try {
             setLoading(true);
-            const response = await axios.get(BASE_URL+'/chats/myChats', { withCredentials: true });
+            const response = await axios.get(BASE_URL + '/chats/myChats', { withCredentials: true });
             const rooms = response.data.chats || [];
             const formattedChats = rooms.map(room => ({
                 _id: room._id,
@@ -40,7 +83,11 @@ const Home = () => {
                 createdAt: room.createdAt,
                 isBlocked: room.isBlocked ?? false
             }));
-            setChats(formattedChats);
+            // Sort by most recent activity
+            const sortedChats = formattedChats.sort((a, b) =>
+                new Date(b.lastMessageTime) - new Date(a.lastMessageTime)
+            );
+            setChats(sortedChats);
         } catch (error) {
             console.error('Error fetching chats:', error);
             setChats([]);
@@ -50,6 +97,12 @@ const Home = () => {
     };
 
     const handleChatClick = (chat) => {
+        // Clear unread count when opening a chat
+        setChats((prevChats) =>
+            prevChats.map((c) =>
+                c._id === chat._id ? { ...c, unreadCount: 0 } : c
+            )
+        );
         navigate(`/chat/${chat._id}`, { state: { chat } });
     };
 
@@ -199,22 +252,22 @@ const Home = () => {
 
 
             {/* Add this below the "Discover People" button */}
-<div className="mt-8 text-center">
-  <p className="text-sm text-gray-500">
-    Crafted with{' '}
-    <span className="inline-block animate-pulse text-red-500">♥</span>
-    {' '}by{' '}
-    <a 
-      href="https://x.com/pratyu_sh_arma"
-      target="_blank"
-      rel="noopener noreferrer"
-      className="text-cyan-500 hover:text-cyan-400 font-medium transition-colors duration-200 relative group"
-    >
-      Pratyush
-      <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-cyan-400 group-hover:w-full transition-all duration-300"></span>
-    </a>
-  </p>
-</div>
+            <div className="mt-8 text-center">
+                <p className="text-sm text-gray-500">
+                    Crafted with{' '}
+                    <span className="inline-block animate-pulse text-red-500">♥</span>
+                    {' '}by{' '}
+                    <a
+                        href="https://x.com/pratyu_sh_arma"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-cyan-500 hover:text-cyan-400 font-medium transition-colors duration-200 relative group"
+                    >
+                        Pratyush
+                        <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-cyan-400 group-hover:w-full transition-all duration-300"></span>
+                    </a>
+                </p>
+            </div>
         </div>
     );
 };
