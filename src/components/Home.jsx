@@ -28,27 +28,45 @@ const Home = () => {
 
     // Socket listener for new messages - updates chat list in real-time
     useEffect(() => {
-        if (!socket) return;
+        console.log('🔧 Home socket effect - Socket exists?', !!socket, 'User ID:', currentUserId);
+
+        if (!socket) {
+            console.log('❌ No socket, skipping listener setup');
+            return;
+        }
+
+        console.log('✅ Setting up newMessage listener in Home');
 
         const handleNewMessage = (message) => {
-            console.log('New message received in Home:', message);
+            console.log('🔔 NEW MESSAGE IN HOME:', message);
+            console.log('Message chat ID:', message.chat);
+            console.log('Message sender:', message.sender);
 
             setChats((prevChats) => {
+                console.log('Current chats:', prevChats.map(c => c.name));
+
                 const updatedChats = prevChats.map((chat) => {
                     if (chat._id === message.chat) {
+                        console.log('✅ MATCH! Updating chat:', chat.name);
+
+                        const isOwnMessage = message.sender?._id === currentUserId;
+                        console.log('Is own message?', isOwnMessage);
+
                         // Update chat with new message info
                         return {
                             ...chat,
                             lastMessage: message.content,
                             lastMessageTime: message.createdAt,
                             // Only increment unread if message is NOT from current user
-                            unreadCount: message.sender._id !== currentUserId
-                                ? (chat.unreadCount || 0) + 1
-                                : chat.unreadCount || 0
+                            unreadCount: isOwnMessage
+                                ? (chat.unreadCount || 0)
+                                : (chat.unreadCount || 0) + 1
                         };
                     }
                     return chat;
                 });
+
+                console.log('Updated chats:', updatedChats.map(c => ({ name: c.name, unread: c.unreadCount })));
 
                 // Sort chats by most recent message (newest first)
                 return updatedChats.sort((a, b) =>
@@ -58,8 +76,10 @@ const Home = () => {
         };
 
         socket.on('newMessage', handleNewMessage);
+        console.log('✅ Listener registered');
 
         return () => {
+            console.log('🔌 Cleaning up listener');
             socket.off('newMessage', handleNewMessage);
         };
     }, [socket, currentUserId]);
@@ -190,7 +210,7 @@ const Home = () => {
                     <div className="space-y-2">
                         {filteredChats.map((chat) => (
                             <div
-                                key={chat.id}
+                                key={chat._id}
                                 onClick={() => handleChatClick(chat)}
                                 className="bg-white rounded-lg p-4 cursor-pointer hover:shadow-md transition-all duration-200 border border-gray-100"
                             >
