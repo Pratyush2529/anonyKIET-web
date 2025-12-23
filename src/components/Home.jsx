@@ -15,7 +15,12 @@ import { useSelector } from 'react-redux';
 const Home = () => {
     const navigate = useNavigate();
     const socket = getSocket();
-    const currentUserId = useSelector((store) => store.user?._id);
+    const user = useSelector((store) => store.user);
+    const currentUserId = user?._id;
+
+    // Debug: Check what's in Redux
+    console.log('🔍 Redux user object:', user);
+    console.log('🔍 Current user ID:', currentUserId);
 
     const [chats, setChats] = useState([]);
     const [loading, setLoading] = useState(true);
