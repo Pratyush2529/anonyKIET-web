@@ -49,7 +49,7 @@ const Home = () => {
                     if (chat._id === message.chat) {
                         console.log('✅ MATCH! Updating chat:', chat.name);
 
-                        const isOwnMessage = message.sender?._id === currentUserId;
+                        const isOwnMessage = currentUserId ? (message.sender?._id === currentUserId) : false;
                         console.log('Is own message?', isOwnMessage);
 
                         // Update chat with new message info
