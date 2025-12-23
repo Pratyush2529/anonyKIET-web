@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MessageCircle, Users, UserSearch, Plus } from 'lucide-react';
 // import api from '../utils/api';
@@ -17,6 +17,14 @@ const Home = () => {
     const socket = getSocket();
     const user = useSelector((store) => store.user);
     const currentUserId = user?._id;
+
+    // Use ref to always have latest currentUserId in socket listener (fixes closure issue)
+    const currentUserIdRef = useRef(currentUserId);
+
+    // Update ref whenever currentUserId changes
+    useEffect(() => {
+        currentUserIdRef.current = currentUserId;
+    }, [currentUserId]);
 
     // Debug: Check what's in Redux
     console.log('🔍 Redux user object:', user);
@@ -54,8 +62,10 @@ const Home = () => {
                     if (chat._id === message.chat) {
                         console.log('✅ MATCH! Updating chat:', chat.name);
 
-                        const isOwnMessage = currentUserId ? (message.sender?._id === currentUserId) : false;
-                        console.log('Is own message?', isOwnMessage);
+                        // Use ref to get latest currentUserId (avoids stale closure)
+                        const latestUserId = currentUserIdRef.current;
+                        const isOwnMessage = latestUserId ? (message.sender?._id === latestUserId) : false;
+                        console.log('Is own message?', isOwnMessage, '(using ref, userId:', latestUserId, ')');
 
                         // Update chat with new message info
                         return {
@@ -87,7 +97,7 @@ const Home = () => {
             console.log('🔌 Cleaning up listener');
             socket.off('newMessage', handleNewMessage);
         };
-    }, [socket, currentUserId]);
+    }, [socket]); // Removed currentUserId from deps since we use ref
 
     const fetchChats = async () => {
         try {
