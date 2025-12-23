@@ -31,14 +31,22 @@ useEffect(() => {
         e.preventDefault();
         setError('');
 
-        if (!email.trim() || !email.includes('@')) {
+        const trimmedEmail = email.trim().toLowerCase();
+
+        if (!trimmedEmail || !trimmedEmail.includes('@')) {
             setError('Please enter a valid email address');
+            return;
+        }
+
+        // Validate KIET email domain
+        if (!/^[a-z0-9._%+-]+@kiet\.edu$/.test(trimmedEmail)) {
+            setError('Only KIET email addresses are allowed');
             return;
         }
 
         try {
             setLoading(true);
-            await axios.post(BASE_URL+'/sendOtp', { emailId: email.trim() }, { withCredentials: true });
+            await axios.post(BASE_URL+'/sendOtp', { emailId: trimmedEmail }, { withCredentials: true });
             setOtpSent(true);
         } catch (error) {
             console.error('Error sending OTP:', error);
